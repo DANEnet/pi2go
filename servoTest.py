@@ -43,10 +43,7 @@ def readkey(getchar_fn=None):
 
 
 pi2go.init()
-if pi2go.version() == 1:
-    print "Pi2Go Version: FULL"
-else:
-    print "Pi2Go Version: LITE"
+print "pi2go version: ", pi2go.version()
 
 def doServos():
     pi2go.setServo(pan, pVal)

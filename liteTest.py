@@ -14,18 +14,18 @@ pi2go.init()
 
 vsn = pi2go.version()
 try:
-  if vsn != 2:
-    print "This program only runs on Pi2Go-Lite"
-  else:
-    while True:
-      pi2go.LsetLED(front, LEDon)
-      time.sleep(0.5)
-      pi2go.LsetLED(front, LEDoff)
-      time.sleep(0.5)
-      pi2go.LsetLED(rear, LEDon)
-      time.sleep(0.5)
-      pi2go.LsetLED(rear, LEDoff)
-      time.sleep(0.5)
+  #if vsn != 2:
+  #  print "This program only runs on Pi2Go-Lite"
+  #else:
+  while True:
+    pi2go.LsetLED(front, LEDon)
+    time.sleep(0.5)
+    pi2go.LsetLED(front, LEDoff)
+    time.sleep(0.5)
+    pi2go.LsetLED(rear, LEDon)
+    time.sleep(0.5)
+    pi2go.LsetLED(rear, LEDoff)
+    time.sleep(0.5)
 
 except:
   print

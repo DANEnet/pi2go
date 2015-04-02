@@ -1,20 +1,9 @@
-# Pi2Go Motor Test
-# Moves: Forward, Reverse, turn Right, turn Left, Stop - then repeat
-# Press Ctrl-C to stop
-#
-# Also demonstrates writing to the LEDs
-#
-# To check wiring is correct ensure the order of movement as above is correct
-# Run using: sudo python motorTest.py
+# testMotors - motors through pi2go
 
-
-import pi2go, time
-
-# Reading single character by forcing stdin to raw mode
+import testPi2Go, time
 import sys
 import tty
 import termios
-import RPi.GPIO as GPIO
 
 def readchar():
     fd = sys.stdin.fileno()
@@ -43,23 +32,23 @@ def readkey(getchar_fn=None):
 
 speed = 30
 
-pi2go.init()
+testPi2Go.init()
 
 # main loop
 try:
     while True:
         keyp = readkey()
         if keyp == 'w' or ord(keyp) == 16:
-            pi2go.forward(speed)
+            testPi2Go.forward(speed)
             print 'Forward', speed
         elif keyp == 'z' or ord(keyp) == 17:
-            pi2go.reverse(speed)
+            testPi2Go.reverse(speed)
             print 'Reverse', speed
         elif keyp == 's' or ord(keyp) == 18:
-            pi2go.spinRight(speed)
+            testPi2Go.spinRight(speed)
             print 'Spin Right', speed
         elif keyp == 'a' or ord(keyp) == 19:
-            pi2go.spinLeft(speed)
+            testPi2Go.spinLeft(speed)
             print 'Spin Left', speed
         elif keyp == '.' or keyp == '>':
             speed = min(100, speed+10)
@@ -68,7 +57,7 @@ try:
             speed = max (0, speed-10)
             print 'Speed-', speed
         elif keyp == ' ':
-            pi2go.stop()
+            testPi2Go.stop()
             print 'Stop'
         elif ord(keyp) == 3:
             break
@@ -77,6 +66,6 @@ except KeyboardInterrupt:
     print
 
 finally:
-    pi2go.cleanup()
+    testPi2Go.cleanup()
     
-GPIO.cleanup()
+

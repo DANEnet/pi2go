@@ -8,27 +8,13 @@ try:
     print "This program only runs on the full Pi2Go"
   else:
     while True:
-        pi2go.setAllLEDs(0, 0, 0) # start with all OFF
-        for i in range(4):
-            pi2go.setLED(i, 4095, 0, 0) # set to Red
-            print 'Red'
+        pi2go.LsetAllLEDs(0, 0, 0) # start with all OFF
+        for i in range(3):
+            pi2go.LsetLED(i, 1) # set to On
+            print 'On'
             time.sleep(0.2)
-            pi2go.setLED(i, 0, 0, 0)
-        for i in range(4):
-            pi2go.setLED(i, 0, 4095, 0) # set to Green
-            print 'Green'
-            time.sleep(0.2)
-            pi2go.setLED(i, 0, 0, 0)
-        for i in range(4):
-            pi2go.setLED(i, 0, 0, 4095) # set to Blue
-            print 'Blue'
-            time.sleep(0.2)
-            pi2go.setLED(i, 0, 0, 0)
-        for i in range(4):
-            pi2go.setLED(i, 4095, 4095, 4095) # set to White
-            print 'White'
-            time.sleep(0.2)
-            pi2go.setLED(i, 0, 0, 0)
-
+            pi2go.LsetLED(i, 0) # set to Off
+    pi2go.cleanup()
+            
 except KeyboardInterrupt:
     pi2go.cleanup()
