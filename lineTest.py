@@ -3,11 +3,12 @@
 
 # Must be run as root - sudo python .py 
 
-import time, pi2go
+import time, 
+import pi2go_lib as p2g
 
-pi2go.init()
+p2g.init()
 
-vsn = pi2go.version()
+vsn = p2g.version()
 if vsn == 1:
   print "Running on Pi2Go"
 else:
@@ -16,8 +17,8 @@ else:
 
 try:
     while True:
-        print 'Left:', pi2go.irLeftLine()
-        print 'Right:', pi2go.irRightLine()
+        print 'Left:', p2g.irLeftLine()
+        print 'Right:', p2g.irRightLine()
         print
         time.sleep(1)
                           
@@ -25,4 +26,4 @@ except KeyboardInterrupt:
     print
 
 finally:
-    pi2go.cleanup()
+    p2g.cleanup()

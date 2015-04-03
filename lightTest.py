@@ -10,19 +10,20 @@
 #
 #======================================================================
 
-import pi2go, time
+import pi2go_lib as p2g 
+import time
 
-pi2go.init()
+p2g.init()
 
-vsn = pi2go.version()
+vsn = p2g.version()
 try:
-    pi2go.setAllLEDs(0, 0, 0)
+    p2g.setAllLEDs(0, 0, 0)
 
     while True:
-        light0 = pi2go.getLight(0)
-        light1 = pi2go.getLight(1)
-        light2 = pi2go.getLight(2)
-        light3 = pi2go.getLight(3)
+        light0 = p2g.getLight(0)
+        light1 = p2g.getLight(1)
+        light2 = p2g.getLight(2)
+        light3 = p2g.getLight(3)
         print "Light sensors: ", light0, light1, light2, light3
         time.sleep(1)
 
@@ -30,4 +31,4 @@ except KeyboardInterrupt:
     print
 
 finally:
-    pi2go.cleanup()
+    p2g.cleanup()

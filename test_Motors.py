@@ -1,6 +1,7 @@
 # testMotors - motors through pi2go
 
-import testPi2Go, time
+import pi2go_lib as p2g 
+import time
 import sys
 import tty
 import termios
@@ -32,23 +33,23 @@ def readkey(getchar_fn=None):
 
 speed = 30
 
-testPi2Go.init()
+p2g.init()
 
 # main loop
 try:
     while True:
         keyp = readkey()
         if keyp == 'w' or ord(keyp) == 16:
-            testPi2Go.forward(speed)
+            p2g.forward(speed)
             print 'Forward', speed
         elif keyp == 'z' or ord(keyp) == 17:
-            testPi2Go.reverse(speed)
+            p2g.reverse(speed)
             print 'Reverse', speed
         elif keyp == 's' or ord(keyp) == 18:
-            testPi2Go.spinRight(speed)
+            p2g.spinRight(speed)
             print 'Spin Right', speed
         elif keyp == 'a' or ord(keyp) == 19:
-            testPi2Go.spinLeft(speed)
+            p2g.spinLeft(speed)
             print 'Spin Left', speed
         elif keyp == '.' or keyp == '>':
             speed = min(100, speed+10)
@@ -57,7 +58,7 @@ try:
             speed = max (0, speed-10)
             print 'Speed-', speed
         elif keyp == ' ':
-            testPi2Go.stop()
+            p2g.stop()
             print 'Stop'
         elif ord(keyp) == 3:
             break
@@ -66,6 +67,6 @@ except KeyboardInterrupt:
     print
 
 finally:
-    testPi2Go.cleanup()
+    p2g.cleanup()
     
 

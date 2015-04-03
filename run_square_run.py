@@ -9,62 +9,62 @@
 
 
 #from pi2go_functions import pi2go
-import pi2go_functions
+import pi2go_lib as p2g
 import time
 import sys
 
-pi2go_functions.init()
+p2g.init()
 
 # main loop
 time.sleep(10.0)
 
-pi2go_functions.turnForward(40,38)
+p2g.turnForward(40,38)
 time.sleep(5.000)
 
-pi2go_functions.spinLeft(30)
+p2g.spinLeft(30)
 time.sleep(2.000)
 
 print 'Stop'
-pi2go_functions.stop()
+p2g.stop()
 time.sleep (2.0)
 
 
-pi2go_functions.turnForward(40,38)
+p2g.turnForward(40,38)
 time.sleep(5.000)
 
-pi2go_functions.spinLeft(30)
+p2g.spinLeft(30)
 time.sleep(5.000)
 
 print 'Stop'
-pi2go_functions.stop()
+p2g.stop()
 time.sleep (2.0)
 
 
-pi2go_functions.turnForward(40,38)
+p2g.turnForward(40,38)
 time.sleep(5.000)
 
 
-pi2go_functions.spinLeft(30)
+p2g.spinLeft(30)
 time.sleep(5.000)
 
 print 'Stop'
-pi2go_functions.stop()
+p2g.stop()
 time.sleep (2.0)
 
 
-pi2go_functions.turnForward(40,38)
+p2g.turnForward(40,38)
 time.sleep(5.000)
 
 print 'Stop'
-pi2go_functions.stop()
+p2g.stop()
 time.sleep (2.0)
 
-pi2go_functions.spinRight(30)
+p2g.spinRight(30)
 time.sleep(5.000)
 
-pi2go_functions.turnForward(40,38)
+p2g.turnForward(40,38)
 time.sleep(5.000)
 
-pi2go_functions.stop()
+p2g.stop()
 sys.exit()
 

@@ -8,49 +8,50 @@
 # Run using: sudo python motorTest.py
 
 
-import pi2go, time
+import pi2go as p2g 
+import time
 
-pi2go.init()
+p2g.init()
 
 # main loop
 
 print 'Forward'
 speed = 20
 print speed
-pi2go.forward(speed)
+p2g.forward(speed)
 time.sleep(1.00)
 
 print 'Reverse'
-pi2go.reverse(speed)
+p2g.reverse(speed)
 time.sleep(1.00)
 
 print 'Spin Right'
-pi2go.spinRight(speed)
+p2g.spinRight(speed)
 time.sleep(1.00)
 
 print 'Spin Left'
-pi2go.spinLeft(speed)
+p2g.spinLeft(speed)
 time.sleep(1.00)
 
 print 'Turn Right'
-pi2go.turnForward(40, 15)
+p2g.turnForward(40, 15)
 time.sleep(1.00)
 
 print 'Turn Left'
-pi2go.turnForward(15, 40)
+p2g.turnForward(15, 40)
 time.sleep(1.00)
 
 print 'Reverse Right'
-pi2go.turnReverse(40, 15)
+p2g.turnReverse(40, 15)
 time.sleep(1.00)
 
 print 'Reverse Left'
-pi2go.turnReverse(15, 40)
+p2g.turnReverse(15, 40)
 time.sleep(1.00)
 
 print 'Stop'
-pi2go.stop()
+p2g.stop()
 
-pi2go.cleanup()
+p2g.cleanup()
 
 

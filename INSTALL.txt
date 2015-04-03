@@ -1,0 +1,31 @@
+Setup SD Card
+	This sequence sets up an SD card as used by 4tronix
+Setup OS and I2C
+	1. Download the latest Raspbian image (currently 16/2/2015)
+	2. Use Win32DiskImager to copy the image to a blank SD card
+	3. Boot into the card and within raspi-config set up the following:
+		a. Boot to desktop
+		b. Resize the card
+		c. Advanced options, setup I2C and load on boot
+	4. Save and reboot 5. From LXTerminal:
+		a. sudo apt-get update
+		b. sudo apt-get install python-smbus
+		c. sudo nano /etc/modules and add “i2c-dev” as the last line
+
+Install VNC
+	wget http://goo.gl/MbfUEp -O isx11.sh
+	sudo bash isx11.sh
+	Depending on the VNC client you use, you may want to remove the
+		–display and –file transfer commands from the startup file
+	cd .config/autostart
+	sudo nano x11vnc.desktop
+	remove everything after “Exec=x11vnc -forever -usepw” on that line
+	save and exit
+	sudo reboot
+
+Install and Test Pi2Go Software
+	git clone https://github.com/DANEnet/pi2go.git
+	cd pi2go
+	sudo python motorTest.py
+
+
