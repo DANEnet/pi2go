@@ -11,7 +11,7 @@
 #from pi2go_functions import pi2go
 import pi2go_lib as p2g
 import time
-import sys
+import sys, path
 
 p2g.init()
 
