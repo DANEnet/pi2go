@@ -1,0 +1,6 @@
+sudo apt-get update
+sudo apt-get upgrade
+#get the ScratchGPIO
+wget http://bit.ly/-O isgh7.sh
+sudo bash isgh7.sh
+
