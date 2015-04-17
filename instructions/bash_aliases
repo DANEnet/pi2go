@@ -1,0 +1,4 @@
+alias ll="ls -lh"
+alias dush="su -sh"
+alias df="df -h"
+
