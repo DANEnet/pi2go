@@ -1,5 +1,9 @@
 #!/usr/bin/python
 #
+# Python module to implement the pi2go-Lite subset
+# 04/04/2015 - adapted by Mike Ricker for DANEnet 
+#
+#======================================================================
 # Python Module to externalise all Pi2Go specific hardware
 #
 # Created by Gareth Davies and Zachary Igielman, May 2014
@@ -11,23 +15,35 @@
 #
 #======================================================================
 
-
 #======================================================================
 # General Functions
-# (Both versions)
 #
-# init(). Initialises GPIO pins, switches motors and LEDs Off, etc
+# init(). 
+#    1. initialize GPIO
+#    2. set pins for white LEDs
+#    3. set motors and turn off
+#
 # cleanup(). Sets all motors and LEDs off and sets GPIO to standard values
-# version(). Returns 1 for Full Pi2Go, and 2 for Pi2Go-Lite. Invalid until after init() has been called
+#    1. performs GPIO cleanup
+#    2. turn white LEDs off
+#    3. turn motors off
+#
 #======================================================================
-
-
+#======================================================================
+# WHITE LED Functions
+#
+# LsetLED(LED, value): Sets the LED specified to OFF == 0 or ON >= 1
+#
+# LsetAllLEDs(value): Sets both LEDs to OFF == 0 or ON >= 1
+#
+#======================================================================
 #======================================================================
 # Motor Functions
 # (Both Versions)
 #
 # stop(): Stops both motors
 # forward(speed): Sets both motors to move forward at speed. 0 <= speed <= 100
+
 # reverse(speed): Sets both motors to reverse at speed. 0 <= speed <= 100
 # spinLeft(speed): Sets motors to turn opposite directions at speed. 0 <= speed <= 100
 # spinRight(speed): Sets motors to turn opposite directions at speed. 0 <= speed <= 100
@@ -36,6 +52,9 @@
 # go(leftSpeed, rightSpeed): controls motors in both directions independently using different positive/negative speeds. -100<= leftSpeed,rightSpeed <= 100
 # go(speed): controls motors in both directions together with positive/negative speed parameter. -100<= speed <= 100
 #======================================================================
+
+
+
 
 
 #======================================================================
@@ -47,23 +66,6 @@
 # stepSpinR(speed, steps): Spins right specified number of counts, then stops
 #======================================================================
 
-
-#======================================================================
-# RGB LED Functions
-# (Full Pi2Go only)
-#
-# setLED(LED, Red, Green, Blue): Sets the LED specified to required RGB value. 0 >= LED <= 4; 0 <= R,G,B <= 4095
-# setAllLEDs(Red, Green, Blue): Sets all LEDs to required RGB. 0 <= R,G,B <= 4095
-#======================================================================
-
-
-#======================================================================
-# WHITE LED Functions
-# (Pi2Go-Lite only)
-#
-# LsetLED(LED, value): Sets the LED specified to OFF == 0 or ON >= 1
-# LsetAllLEDs(value): Sets both LEDs to OFF == 0 or ON >= 1
-#======================================================================
 
 
 #======================================================================
@@ -116,15 +118,16 @@
 
 
 # Import all necessary libraries
-import RPi.GPIO as GPIO, sys, threading, time, os
+import RPi.GPIO as GPIO
+import time
+import threading
 from Adafruit_PWM_Servo_Driver import PWM
-##from sgh_PCF8591P import sgh_PCF8591P
 
-# Define Type of Pi2Go
-PGNone = 0
-PGFull = 1
-PGLite = 2
-PGType = PGNone # Set to None until we find out which during init()
+global lineLeft, lineRight
+
+# Define GPIO pins for Front/rear LEDs
+frontLED = 15
+rearLED = 16
 
 # Pins 24, 26 Left Motor
 # Pins 19, 21 Right Motor
@@ -133,131 +136,152 @@ L2 = 24
 R1 = 19
 R2 = 21
 
-# Define obstacle sensors and line sensors
-irFL = 7
-irFR = 11
-irMID = 15  # this sensor not available on Lite version
-lineRight = 13
-lineLeft = 12
-
-# Define Colour IDs for the RGB LEDs (Pi2Go full only)
-Blue = 0
-Green = 1
-Red = 2
-pwmMax = 4095 # maximum PWM value
-
-# Define GPIO pins for Front/rear LEDs on Pi2Go-Lite
-frontLED = 15
-rearLED = 16
-
-# Define Sonar Pin (same pin for both Ping and Echo
-sonar = 8
-
-# Define pins for switch (different on each version)
-switch = 16
-Lswitch = 23
-
-# Define if servo background process is active
-ServosActive = False
-
 # Global variables for wheel sensor counting
 running = True
 countL = 0
 countR = 0
 
-#leftCount = 0
-#rightCount = 0
-#lastL = 0
-#lastR = 0
+leftCount = 0
+rightCount = 0
+lastL = 0
+lastR = 0
+
+
+
+# import sys, os
+
+
+# Define obstacle sensors and line sensors
+#irFL = 7
+#irFR = 11
+#irMID = 15  # this sensor not available on Lite version
+lineRight = 13
+lineLeft = 12
+
+#pwmMax = 4095 # maximum PWM value
+
+# Define Sonar Pin (same pin for both Ping and Echo
+#sonar = 8
+
+# Define pins for switch (different on each version)
+#switch = 16
+#Lswitch = 23
+
+# Define if servo background process is active
+#ServosActive = False
 
 #======================================================================
 # General Functions
 #
 # init(). Initialises GPIO pins, switches motors and LEDs Off, etc
 def init():
-    global p, q, a, b, pwm, PGType
-    ##global pcfADC
-    PGType = PGFull
-    # Initialise the PCA9685 PWM device using the default address
-    try:
-        pwm = PWM(0x40, debug = False)
-        pwm.setPWMFreq(60)  # Set frequency to 60 Hz
-    except:
-        PGType = PGLite # No PCA9685 so set to Pi2Go-Lite
 
-    #use physical pin numbering
+#use physical pin numbering
     GPIO.setmode(GPIO.BOARD)
+
+#set up Pi2Go-Lite White LEDs as outputs
+    GPIO.setup(frontLED, GPIO.OUT)
+    GPIO.setup(rearLED, GPIO.OUT)
+
+# initialize motors
+    global p, q, a, b, pwm
+#   p = forward speed left
+#   q = reverse speed left
+#   a = forward speed right
+#   b = reverse speed right
+#   pwm =
+
+#use pwm on inputs so motors don't go too fast
+    GPIO.setup(L1, GPIO.OUT)
+    p = GPIO.PWM(L1, 1)
+    p.start(0)
+
+    GPIO.setup(L2, GPIO.OUT)
+    q = GPIO.PWM(L2, 1)
+    q.start(0)
+
+    GPIO.setup(R1, GPIO.OUT)
+    a = GPIO.PWM(R1, 1)
+    a.start(0)
+
+    GPIO.setup(R2, GPIO.OUT)
+    b = GPIO.PWM(R2, 1)
+    b.start(0)
+
+    lineLeft = 12
+    lineRight = 13
 
     #set up digital line detectors as inputs
     GPIO.setup(lineRight, GPIO.IN) # Right line sensor
     GPIO.setup(lineLeft, GPIO.IN) # Left line sensor
 
+    # initialise wheel counters
+    threadC = threading.Thread(target = wheelCount)
+    threadC.start()
+    running = True
+
+
+    # Initialise the PCA9685 PWM device using the default address
+#    try:
+#        pwm = PWM(0x40, debug = False)
+#        pwm.setPWMFreq(60)  # Set frequency to 60 Hz
+#    except:
+#        PGType = PGLite # No PCA9685 so set to Pi2Go-Lite
+
     #Set up IR obstacle sensors as inputs
-    GPIO.setup(irFL, GPIO.IN) # Left obstacle sensor
-    GPIO.setup(irFR, GPIO.IN) # Right obstacle sensor
-    GPIO.setup(irMID, GPIO.IN) # Centre Front obstacle sensor
-
-    #use pwm on inputs so motors don't go too fast
-    GPIO.setup(L1, GPIO.OUT)
-    p = GPIO.PWM(L1, 20)
-    p.start(0)
-
-    GPIO.setup(L2, GPIO.OUT)
-    q = GPIO.PWM(L2, 20)
-    q.start(0)
-
-    GPIO.setup(R1, GPIO.OUT)
-    a = GPIO.PWM(R1, 20)
-    a.start(0)
-
-    GPIO.setup(R2, GPIO.OUT)
-    b = GPIO.PWM(R2, 20)
-    b.start(0)
-
-    # Initalise the ADC
-    ##pcfADC = None # ADC object
-    ##try:
-    ##    pcfADC = sgh_PCF8591P(1) #i2c, 0x48)
-    ##except:
-    ##    PGType = PGLite
+#    GPIO.setup(irFL, GPIO.IN) # Left obstacle sensor
+#    GPIO.setup(irFR, GPIO.IN) # Right obstacle sensor
+#    GPIO.setup(irMID, GPIO.IN) # Centre Front obstacle sensor
 
     # initialise servos (Pi2Go-Lite only)
-    if PGType == PGLite:
-        startServos()
-
-    #set up Pi2Go-Lite White LEDs as outputs
-        GPIO.setup(frontLED, GPIO.OUT)
-        GPIO.setup(rearLED, GPIO.OUT)
+#    if PGType == PGLite:
+#        startServos()
 
     #set switch as input with pullup
-    if PGType == PGLite:
-        GPIO.setup(Lswitch, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    else:
-        GPIO.setup(switch, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-    # initialise wheel counters if Pi2Go-Lite
-    if PGType == PGLite:
-        threadC = threading.Thread(target = wheelCount)
-        threadC.start()
-        running = True
+#    if PGType == PGLite:
+#        GPIO.setup(Lswitch, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#    else:
+#        GPIO.setup(switch, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
 # cleanup(). Sets all motors and LEDs off and sets GPIO to standard values
 def cleanup():
-    global running
-    running = False
+#    global running
+#    running = False
+
+# stop both motors
     stop()
-    LsetLED (0, 0)
-    LsetLED (1, 0)
+
+# turn off front and back LEDs
+    LsetAllLEDs(0)
+
+# wait 1 second and reset all GPIO
     time.sleep(1)
     GPIO.cleanup()
 
 
-# version(). Returns 1 for Full Pi2Go, and 2 for Pi2Go-Lite. Invalid until after init() has been called
-def version():
-    return PGType
-
 # End of General Functions
+#======================================================================
+
+#======================================================================
+# White LED Functions
+#
+#  LsetLED(LED, value): Sets the LED specified to OFF == 0 or ON == 1
+# TODO: take value from 0 to 100 and use as percentage PWM value
+def LsetLED (LED, value):
+    value = 1 - value
+
+    if LED == 0:
+        GPIO.output (frontLED, value)
+    else:
+        GPIO.output (rearLED, value)
+        
+# LsetAllLEDs(value): Sets both LEDs to OFF == 0 or ON == 1
+def LsetAllLEDs(value):
+    LsetLED(0, value)
+    LsetLED(1, value)
+    
+# End of White LED Functions
 #======================================================================
 
 
@@ -345,20 +369,12 @@ def go(leftSpeed, rightSpeed):
         a.ChangeDutyCycle(rightSpeed)
         p.ChangeFrequency(rightSpeed + 5)
 
-# go(speed): controls motors in both directions together with positive/negative speed parameter. -100<= speed <= 100
-def goBoth(speed):
-    if speed<0:
-        reverse(abs(speed))
-    else:
-        forward(speed)
-
 # End of Motor Functions
 #======================================================================
 
 
 #======================================================================
 # Wheel Sensor Functions
-# (Pi2Go-Lite only)
 
 def stopL():
     p.ChangeDutyCycle(0)
@@ -369,7 +385,7 @@ def stopR():
     b.ChangeDutyCycle(0)
 
 def wheelCount():
-    global running, countL, countR
+    global running, countL, countR, lineLeft, lineRight
     lastValidL = 2
     lastValidR = 2
     lastL = GPIO.input(lineLeft)
@@ -380,75 +396,105 @@ def wheelCount():
         # print "lineLeft ", lineLeft
         val = GPIO.input(lineLeft)
         if val == lastL and val != lastValidL:
-            countL += 1
+            if countL > 0:
+                countL -= 1
             lastValidL = val
+            print "L ",countL
         lastL = val
         val = GPIO.input(lineRight)
         if val == lastR and val != lastValidR:
-            countR += 1
+            if countR > 0:
+                countR -= 1
             lastValidR = val
+            print "R ",countR
         lastR = val
 
+def step(leftSpeed, leftSteps, rightSpeed, rightSteps):
+    global running, countL, countR
+    countL = leftSteps
+    countR = rightSteps
+
+    if countL > 0 and countR > 0:
+        go(leftSpeed, rightSpeed)
+    else:
+        if countL > 0:
+            spinLeft(leftSpeed)
+        if countR > 0:
+            spinRight(rightSpeed)
+    
+    while countL > 0 or countR > 0:
+        time.sleep(0.002)
+        if countL <= 0:
+            stopL()
+            while countR > 0:
+                time.sleep(0.002)
+            running = False
+            
+        if countR <= 0:
+            stopR()
+            while countL > 0:
+                time.sleep(0.002)
+            running = False
 
 # stepForward(speed, steps): Moves forward specified number of counts, then stops
-def stepForward(speed, counts):
-    global countL, countR
-    countL = 0
-    countR = 0
-    runL = True
-    runR = True
-    turnForward(speed, speed)
-    while runL or runR:
-        time.sleep(0.002)
-        if countL >= counts:
-            stopL()
-            runL = False
-        if countR >= counts:
-            stopR()
-            runR = False
+#def stepForward(speed, counts):
+#    global countL, countR
+#    countL = 0
+#    countR = 0
+#    runL = True
+#    runR = True
+#    turnForward(speed, speed)
+#    while runL or runR:
+#        time.sleep(0.002)
+#        if countL >= counts:
+#            stopL()
+#            runL = False
+#        if countR >= counts:
+#            stopR()
+#            runR = False
             
 # stepReverse(speed, steps): Moves backward specified number of counts, then stops
-def stepReverse(speed, counts):
-    global countL, countR
-    countL = 0
-    countR = 0
-    runL = True
-    runR = True
-    turnReverse(speed, speed)
-    while runL or runR:
-        time.sleep(0.002)
-        if countL >= counts:
-            stopL()
-            runL = False
-        if countR >= counts:
-            stopR()
-            runR = False
+#def stepReverse(speed, counts):
+#    global countL, countR
+#    countL = 0
+#    countR = 0
+#    runL = True
+#    runR = True
+#    turnReverse(speed, speed)
+#    while runL or runR:
+#        time.sleep(0.002)
+#        if countL >= counts:
+#            stopL()
+#            runL = False
+#        if countR >= counts:
+#            stopR()
+#            runR = False
             
 # stepSpinL(speed, steps): Spins left specified number of counts, then stops
-def stepSpinL(speed, counts):
-    global countL, countR
-    countL = 0
-    countR = 0
-    spinLeft(speed)
-    while countL<counts or countR<counts:
-        time.sleep(0.002)
-        if countL >= counts:
-            stopL()
-        if countR >= counts:
-            stopR()
+#def stepSpinL(speed, counts):
+#    global countL, countR
+#    countL = counts
+#    countR = 0
+#    spinLeft(speed)
+#    while countL<counts or countR<counts:
+#        time.sleep(0.002)
+#        if 0 >= counts:
+#            stopL()
+#        if 0 >= counts:
+#            stopR()
             
 # stepSpinR(speed, steps): Spins right specified number of counts, then stops
-def stepSpinR(speed, counts):
-    global countL, countR
-    countL = 0
-    countR = 0
-    spinRight(speed)
-    while countL<counts or countR<counts:
-        time.sleep(0.002)
-        if countL >= counts:
-            stopL()
-        if countR >= counts:
-            stopR()
+#def stepSpinR(speed, counts):
+#    global countL, countR
+#    countL = 0
+#    countR = 0
+#    spinRight(speed)
+#    while countL<counts or countR<counts:
+#        time.sleep(0.002)
+#        if countL >= counts:
+#            stopL()
+#        if countR >= counts:
+#            stopR()
 
 
 # ======= OLD Deprecated Functions =======
@@ -466,8 +512,8 @@ def stepSpinR(speed, counts):
 ###    turnForward(speed, int (speed * stepsR / stepsL))
 ##    forward(speed)
 
-intCountL = 0
-intCountR = 0
+#intCountL = 0
+#intCountR = 0
 
 # Wheel counter call backs, remove themselves when count reaches zero (I hope!)
 ##def leftCounterOld(channel):
@@ -503,96 +549,54 @@ intCountR = 0
 #======================================================================
 
 
-#======================================================================
-# RGB LED Functions
-# (Full version only)
-#
-# setLED(LED, Red, Green, Blue): Sets the LED specified to required RGB value. 0 >= LED <= 3; 0 <= R,G,B <= 4095
-##def setLED(LED, red, green, blue):
-##    if PGType == PGFull:
-##        pwm.setPWM(LED * 3 + Red, 0, red)
-##        pwm.setPWM(LED * 3 + Green, 0, green)
-##        pwm.setPWM(LED * 3 + Blue, 0, blue)
-
-# setAllLEDs(Red, Green, Blue): Sets all LEDs to required RGB. 0 <= R,G,B <= 4095
-##def setAllLEDs (red, green, blue):
-##  for i in range(4):
-##    setLED(i, red, green, blue)
-
-# End of RGB LED Functions
-#======================================================================
-
-
-#======================================================================
-# White LED Functions
-# (Pi2Go-Lite only)
-#
-# LsetLED(LED, value): Sets the LED specified to OFF == 0 or ON == 1
-# TODO: take value from 0 to 100 and use as percentage PWM value
-def LsetLED (LED, value):
-    if PGType == PGLite:
-        if value == 0:
-            value = 1
-        else:
-            value = 0
-        if LED == 0:
-            GPIO.output (frontLED, value)
-        else:
-            GPIO.output (rearLED, value)
-        
-# LsetAllLEDs(value): Sets both LEDs to OFF == 0 or ON == 1
-
-# End of White LED Functions
-#======================================================================
-
 
 #======================================================================
 # IR Sensor Functions
 #
 # irLeft(): Returns state of Left IR Obstacle sensor
-def irLeft():
-    if GPIO.input(irFL)==0:
-        return True
-    else:
-        return False
+#def irLeft():
+#    if GPIO.input(irFL)==0:
+#        return True
+#    else:
+#        return False
     
 # irRight(): Returns state of Right IR Obstacle sensor
-def irRight():
-    if GPIO.input(irFR)==0:
-        return True
-    else:
-        return False
+#def irRight():
+#    if GPIO.input(irFR)==0:
+#        return True
+#    else:
+#        return False
     
 # irCentre(): Returns state of Centre IR Obstacle sensor
 # (Not available on Pi2Go-Lite)
-def irCentre():
-    if PGType != PGFull:
-        return False
-    if GPIO.input(irMID)==0:
-        return True
-    else:
-        return False
+#def irCentre():
+#    if PGType != PGFull:
+#        return False
+#    if GPIO.input(irMID)==0:
+#        return True
+#    else:
+#        return False
     
 # irAll(): Returns true if any of the Obstacle sensors are triggered
-def irAll():
-    if GPIO.input(irFL)==0 or GPIO.input(irFR)==0 or (PGType==PGFull and GPIO.input(irMID)==0):
-        return True
-    else:
-        return False
+#def irAll():
+#    if GPIO.input(irFL)==0 or GPIO.input(irFR)==0 or (PGType==PGFull and GPIO.input(irMID)==0):
+#        return True
+#    else:
+#        return False
     
 # irLeftLine(): Returns state of Left IR Line sensor
-def irLeftLine():
-    if GPIO.input(lineLeft)==0:
-        return True
-    else:
-        return False
+#def irLeftLine():
+#    if GPIO.input(lineLeft)==0:
+#        return True
+#    else:
+#        return False
     
 # irRightLine(): Returns state of Right IR Line sensor
-def irRightLine():
-    if GPIO.input(lineRight)==0:
-        return True
-    else:
-        return False
+#def irRightLine():
+#    if GPIO.input(lineRight)==0:
+#        return True
+#    else:
+#        return False
     
 # End of IR Sensor Functions
 #======================================================================
@@ -604,27 +608,27 @@ def irRightLine():
 # getDistance(). Returns the distance in cm to the nearest reflecting object. 0 == no object
 # (Both versions)
 #
-def getDistance():
-    GPIO.setup(sonar, GPIO.OUT)
-    # Send 10us pulse to trigger
-    GPIO.output(sonar, True)
-    time.sleep(0.00001)
-    GPIO.output(sonar, False)
-    start = time.time()
-    count=time.time()
-    GPIO.setup(sonar,GPIO.IN)
-    while GPIO.input(sonar)==0 and time.time()-count<0.1:
-        start = time.time()
-    count=time.time()
-    stop=count
-    while GPIO.input(sonar)==1 and time.time()-count<0.1:
-        stop = time.time()
-    # Calculate pulse length
-    elapsed = stop-start
-    # Distance pulse travelled in that time is time
-    # multiplied by the speed of sound 34000(cm/s) divided by 2
-    distance = elapsed * 17000
-    return distance
+#def getDistance():
+#    GPIO.setup(sonar, GPIO.OUT)
+#    # Send 10us pulse to trigger
+#    GPIO.output(sonar, True)
+#    time.sleep(0.00001)
+#    GPIO.output(sonar, False)
+#    start = time.time()
+#    count=time.time()
+#    GPIO.setup(sonar,GPIO.IN)
+#    while GPIO.input(sonar)==0 and time.time()-count<0.1:
+#        start = time.time()
+#    count=time.time()
+#    stop=count
+#    while GPIO.input(sonar)==1 and time.time()-count<0.1:
+#        stop = time.time()
+#    # Calculate pulse length
+#    elapsed = stop-start
+#    # Distance pulse travelled in that time is time
+#    # multiplied by the speed of sound 34000(cm/s) divided by 2
+#    distance = elapsed * 17000
+#    return distance
 
 # End of UltraSonic Functions    
 #======================================================================
@@ -677,12 +681,12 @@ def getDistance():
 # Switch Functions
 # 
 # getSwitch(). Returns the value of the tact switch: True==pressed
-def getSwitch():
-    if PGType == 1:
-        val = GPIO.input(switch)
-    else:
-        val = GPIO.input(Lswitch)
-    return (val == 0)
+#def getSwitch():
+#    if PGType == 1:
+#        val = GPIO.input(switch)
+#    else:
+#        val = GPIO.input(Lswitch)
+#    return (val == 0)
 #
 # End of switch functions
 #======================================================================
@@ -694,35 +698,35 @@ def getSwitch():
 # Pi2Go-Lite uses ServoD to control servos
 # Pi2Go Full uses the PCA9685 hardware controller
 
-def setServo(Servo, Degrees):
-    #print "ServosActive:", ServosActive
-    if ServosActive == False:
-        startServos()
-    pinServod (Servo, Degrees) # for now, simply pass on the input values
+#def setServo(Servo, Degrees):
+#    #print "ServosActive:", ServosActive
+#    if ServosActive == False:
+#        startServos()
+#    pinServod (Servo, Degrees) # for now, simply pass on the input values
 
-def stopServos():
-    stopServod()
+#def stopServos():
+#    stopServod()
     
-def startServos():
-    startServod()
+#def startServos():
+#    startServod()
     
-def startServod():
-    global ServosActive
-    #print "Starting servod. ServosActove:", ServosActive
-    SCRIPTPATH = os.path.split(os.path.realpath(__file__))[0]
-    #os.system("sudo pkill -f servod")
-    os.system(SCRIPTPATH +'/servod --idle-timeout=20000 --p1pins="18,22" > /dev/null') 
-    #print (SCRIPTPATH +'/servod --idle-timeout=20000 --p1pins="18,22"')
-    ServosActive = True
+#def startServod():
+#    global ServosActive
+#    #print "Starting servod. ServosActove:", ServosActive
+#    SCRIPTPATH = os.path.split(os.path.realpath(__file__))[0]
+#    #os.system("sudo pkill -f servod")
+#    os.system(SCRIPTPATH +'/servod --idle-timeout=20000 --p1pins="18,22" > /dev/null') 
+#    #print (SCRIPTPATH +'/servod --idle-timeout=20000 --p1pins="18,22"')
+#    ServosActive = True
 
-def pinServod(pin, degrees):
-    #print pin, degrees
-    #print ("echo " + str(pin) + "=" + str(50+ ((90 - degrees) * 200 / 180)) + " > /dev/servoblaster")
-    os.system("echo " + str(pin) + "=" + str(50+ ((90 - degrees) * 200 / 180)) + " > /dev/servoblaster")
+#def pinServod(pin, degrees):
+#    #print pin, degrees
+#    #print ("echo " + str(pin) + "=" + str(50+ ((90 - degrees) * 200 / 180)) + " > /dev/servoblaster")
+#    os.system("echo " + str(pin) + "=" + str(50+ ((90 - degrees) * 200 / 180)) + " > /dev/servoblaster")
     
-def stopServod():
-    global ServosActive
-    os.system("sudo pkill -f servod")
-    ServosActive = False
+#def stopServod():
+#    global ServosActive
+#    os.system("sudo pkill -f servod")
+#    ServosActive = False
         
 
